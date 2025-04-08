@@ -114,19 +114,24 @@ export default function Assessment() {
         </div>
       </div>
       
-      {/* Test Modals */}
+      {/* Test Modals - Only show one at a time */}
       {showAptitudeTest && (
         <AptitudeTest 
           onClose={() => setShowAptitudeTest(false)} 
           onComplete={(results) => {
+            // First hide aptitude test, then after a slight delay show results
             setShowAptitudeTest(false);
+            // Store results immediately
             setAssessmentResults(results);
-            setShowAssessmentResults(true);
+            // Small delay to prevent both modals showing at once
+            setTimeout(() => {
+              setShowAssessmentResults(true);
+            }, 100);
           }} 
         />
       )}
       
-      {showAssessmentResults && (
+      {!showAptitudeTest && showAssessmentResults && Object.keys(assessmentResults).length > 0 && (
         <AssessmentResults 
           assessmentResults={assessmentResults}
           onClose={() => setShowAssessmentResults(false)} 

@@ -29,6 +29,7 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
   const [isLoading, setIsLoading] = useState(true);
   const [careerRecommendations, setCareerRecommendations] = useState<RecommendedCareer[]>([]);
   const [expandedCareer, setExpandedCareer] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
   const fieldNameMap: Record<string, string> = {
@@ -65,6 +66,7 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
     const fetchCareerRecommendations = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         
         // Extract top skills from assessment results
         const skillNames = skillScores.slice(0, 3).map(skill => skill.name);
@@ -74,12 +76,19 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
         const education = "College/University";
         
         // Call the Gemini API
-        const result = await getCareerRecommendations(
-          interests,
-          skillNames,
-          education,
-          assessmentResults
-        );
+        let result;
+        try {
+          result = await getCareerRecommendations(
+            interests,
+            skillNames,
+            education,
+            assessmentResults
+          );
+        } catch (apiError) {
+          console.error('API error:', apiError);
+          // Use fallback data instead of failing
+          throw new Error("Failed to connect to recommendation service");
+        }
         
         // Parse the JSON response
         let parsedData;
@@ -124,20 +133,50 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
         // Extract careers from the parsed data
         const recommendations: RecommendedCareer[] = parsedData.careers || [];
         
+        if (recommendations.length === 0) {
+          throw new Error("No career recommendations were generated. Please try again.");
+        }
+        
         // Sort by match percentage
         const sortedRecommendations = [...recommendations].sort((a, b) => b.matchPercentage - a.matchPercentage);
         
         setCareerRecommendations(sortedRecommendations);
         setIsLoading(false);
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching career recommendations:', error);
         setIsLoading(false);
+        setError(error.message || "Failed to generate career recommendations");
         toast({
           title: "Error",
-          description: "Failed to get career recommendations. Please try again.",
+          description: error.message || "Failed to get career recommendations. Please try again.",
           variant: "destructive"
         });
+        
+        // Add fallback recommendations after error
+        setCareerRecommendations([
+          {
+            name: "Frontend Developer",
+            description: "Create user interfaces and interactive experiences for web applications using modern JavaScript frameworks.",
+            matchPercentage: skillScores.find(s => s.name === "Software Development")?.score || 75,
+            skills: ["JavaScript", "React", "CSS", "UI/UX Fundamentals", "Problem Solving"],
+            avgSalary: "$70,000 - $120,000"
+          },
+          {
+            name: "Data Scientist",
+            description: "Analyze complex datasets to extract insights and create predictive models to solve business problems.",
+            matchPercentage: skillScores.find(s => s.name === "Data Science & Analytics")?.score || 70,
+            skills: ["Python", "Statistics", "Machine Learning", "Data Visualization", "SQL"],
+            avgSalary: "$85,000 - $140,000"
+          },
+          {
+            name: "UX Designer",
+            description: "Design intuitive and engaging user experiences for digital products based on user research and testing.",
+            matchPercentage: skillScores.find(s => s.name === "UX/UI Design")?.score || 65,
+            skills: ["User Research", "Wireframing", "Prototyping", "Visual Design", "Usability Testing"],
+            avgSalary: "$65,000 - $110,000"
+          }
+        ]);
       }
     };
     
