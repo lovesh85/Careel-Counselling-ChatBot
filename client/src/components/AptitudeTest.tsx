@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { useAssessment } from '@/hooks/useAssessment';
+import { Label } from '@/components/ui/label';
 import { X } from 'lucide-react';
 
 interface AptitudeTestProps {
@@ -12,172 +11,380 @@ interface AptitudeTestProps {
   onComplete: (results: Record<string, number>) => void;
 }
 
-// Sample questions for the aptitude assessment
-const aptitudeQuestions = [
+// Define the question structure
+interface Question {
+  id: number;
+  question: string;
+  options: string[];
+  category: string;
+}
+
+// Define the questions for the test
+const questions: Question[] = [
   {
     id: 1,
-    question: "I enjoy solving complex problems and puzzles.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    question: "You are given a complex problem with multiple solutions. What's your approach?",
+    options: [
+      "Break it down into smaller parts and solve each systematically",
+      "Brainstorm all possible solutions before choosing the best one",
+      "Look for similar problems that have been solved before",
+      "Use intuition and experience to find the quickest path to a solution"
+    ],
     category: "analytical"
   },
   {
     id: 2,
-    question: "I find it easy to understand abstract concepts and theories.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "analytical"
+    question: "When learning a new skill, you prefer:",
+    options: [
+      "Reading detailed documentation and studying theory first",
+      "Watching tutorials and demonstrations",
+      "Diving in and learning through trial and error",
+      "Working alongside someone who already knows the skill"
+    ],
+    category: "learning"
   },
   {
     id: 3,
-    question: "I am good at organizing information and creating systems.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "organizational"
+    question: "In a group project, which role do you naturally gravitate toward?",
+    options: [
+      "The organizer who keeps everyone on track",
+      "The creative who comes up with innovative ideas",
+      "The implementer who gets things done",
+      "The mediator who ensures everyone works well together"
+    ],
+    category: "teamwork"
   },
   {
     id: 4,
-    question: "I enjoy working with numbers and statistical data.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "mathematical"
+    question: "When debugging code or solving a technical issue, you:",
+    options: [
+      "Follow a structured process of elimination",
+      "Create a mental model of how the system works to identify likely failure points",
+      "Look for patterns in error messages and system behavior",
+      "Ask others for insight or search for similar issues online"
+    ],
+    category: "technical"
   },
   {
     id: 5,
-    question: "I find it easy to express my ideas through writing.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "verbal"
+    question: "How do you approach a tight deadline?",
+    options: [
+      "Create a detailed schedule and stick to it rigorously",
+      "Prioritize tasks and focus on the most important ones first",
+      "Work longer hours to ensure everything gets done",
+      "Delegate where possible and focus on what you do best"
+    ],
+    category: "time_management"
   },
   {
     id: 6,
-    question: "I am comfortable speaking in front of groups.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "verbal"
+    question: "When communicating complex information, you prefer to:",
+    options: [
+      "Use precise technical language to ensure accuracy",
+      "Create visuals like diagrams or charts",
+      "Use analogies and real-world examples",
+      "Adapt your explanation based on the audience's background"
+    ],
+    category: "communication"
   },
   {
     id: 7,
-    question: "I enjoy creating visual designs or artwork.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "creative"
+    question: "You're asked to learn a new programming language quickly. You would:",
+    options: [
+      "Start by building a small project to learn the basics",
+      "Read the language documentation thoroughly",
+      "Find similarities with languages you already know",
+      "Take an online course or follow a structured tutorial"
+    ],
+    category: "technical"
   },
   {
     id: 8,
-    question: "I'm good at understanding how mechanical or technical things work.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "technical"
+    question: "When faced with conflicting priorities, you:",
+    options: [
+      "Assess the impact of each option before deciding",
+      "Consult with stakeholders to understand their needs",
+      "Follow established protocols or guidelines",
+      "Make quick decisions based on immediate needs"
+    ],
+    category: "decision_making"
   },
   {
     id: 9,
-    question: "I enjoy helping others and solving their problems.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "interpersonal"
+    question: "How do you prefer to receive feedback?",
+    options: [
+      "Detailed and specific with examples",
+      "Focused on the big picture and overall performance",
+      "Balanced between strengths and areas for improvement",
+      "Actionable with clear steps for improvement"
+    ],
+    category: "learning"
   },
   {
     id: 10,
-    question: "I am good at influencing people and negotiating.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "interpersonal"
+    question: "Which aspect of a project gives you the most satisfaction?",
+    options: [
+      "Solving complex technical challenges",
+      "Creating elegant, efficient solutions",
+      "Seeing users benefit from your work",
+      "Learning new skills and technologies"
+    ],
+    category: "motivation"
   },
   {
     id: 11,
-    question: "I can quickly learn new software or digital tools.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "technical"
+    question: "When designing a user interface, what do you prioritize?",
+    options: [
+      "Aesthetic appeal and visual consistency",
+      "Efficiency and minimal clicks to complete tasks",
+      "Accessibility and inclusive design",
+      "Familiarity and adherence to common patterns"
+    ],
+    category: "design"
   },
   {
     id: 12,
-    question: "I enjoy coming up with innovative solutions to problems.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
-    category: "creative"
-  },
+    question: "How do you approach data analysis?",
+    options: [
+      "Looking for patterns and trends in the data",
+      "Testing hypotheses through statistical methods",
+      "Visualizing data to identify insights",
+      "Focusing on outliers and unexpected results"
+    ],
+    category: "analytical"
+  }
 ];
 
+// Category weights for scoring
+const categoryWeights: Record<string, Record<string, number>> = {
+  "analytical": {
+    "software_development": 0.9,
+    "data_science": 1.0,
+    "ux_design": 0.6,
+    "project_management": 0.7,
+    "technical_writing": 0.5,
+    "cybersecurity": 0.8,
+    "ai_research": 0.9
+  },
+  "technical": {
+    "software_development": 1.0,
+    "data_science": 0.9,
+    "ux_design": 0.7,
+    "project_management": 0.5,
+    "technical_writing": 0.6,
+    "cybersecurity": 0.9,
+    "ai_research": 0.8
+  },
+  "design": {
+    "software_development": 0.6,
+    "data_science": 0.5,
+    "ux_design": 1.0,
+    "project_management": 0.4,
+    "technical_writing": 0.7,
+    "cybersecurity": 0.3,
+    "ai_research": 0.5
+  },
+  "teamwork": {
+    "software_development": 0.7,
+    "data_science": 0.6,
+    "ux_design": 0.8,
+    "project_management": 1.0,
+    "technical_writing": 0.7,
+    "cybersecurity": 0.6,
+    "ai_research": 0.7
+  },
+  "communication": {
+    "software_development": 0.7,
+    "data_science": 0.6,
+    "ux_design": 0.8,
+    "project_management": 0.9,
+    "technical_writing": 1.0,
+    "cybersecurity": 0.7,
+    "ai_research": 0.6
+  },
+  "time_management": {
+    "software_development": 0.8,
+    "data_science": 0.7,
+    "ux_design": 0.7,
+    "project_management": 1.0,
+    "technical_writing": 0.8,
+    "cybersecurity": 0.8,
+    "ai_research": 0.7
+  },
+  "decision_making": {
+    "software_development": 0.8,
+    "data_science": 0.7,
+    "ux_design": 0.8,
+    "project_management": 0.9,
+    "technical_writing": 0.6,
+    "cybersecurity": 0.8,
+    "ai_research": 0.7
+  },
+  "learning": {
+    "software_development": 0.9,
+    "data_science": 0.8,
+    "ux_design": 0.7,
+    "project_management": 0.6,
+    "technical_writing": 0.7,
+    "cybersecurity": 0.8,
+    "ai_research": 0.9
+  },
+  "motivation": {
+    "software_development": 0.8,
+    "data_science": 0.8,
+    "ux_design": 0.7,
+    "project_management": 0.7,
+    "technical_writing": 0.6,
+    "cybersecurity": 0.7,
+    "ai_research": 0.9
+  }
+};
+
 export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps) {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentAnswer, setCurrentAnswer] = useState<number | null>(null);
+  const [progress, setProgress] = useState(0);
   
-  const { startAssessment } = useAssessment();
+  useEffect(() => {
+    // Calculate progress as a percentage
+    const completedQuestions = Object.keys(answers).length;
+    const progressPercentage = (completedQuestions / questions.length) * 100;
+    setProgress(progressPercentage);
+  }, [answers]);
   
-  const handleAnswer = (value: string) => {
-    // Convert string value to number (0-4)
-    const score = aptitudeQuestions[currentQuestion].options.indexOf(value);
-    
-    setAnswers(prev => ({
-      ...prev,
-      [aptitudeQuestions[currentQuestion].id]: score
-    }));
-    
-    // Move to next question or submit if last question
-    if (currentQuestion < aptitudeQuestions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      handleSubmit();
+  const handleAnswerSelect = (value: string) => {
+    setCurrentAnswer(parseInt(value));
+  };
+  
+  const handleContinue = () => {
+    if (currentAnswer !== null) {
+      // Save answer
+      setAnswers({ ...answers, [currentQuestionIndex]: currentAnswer });
+      
+      // Move to next question or complete the test
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setCurrentAnswer(null);
+      } else {
+        // Calculate results
+        const results = calculateResults(answers);
+        onComplete(results);
+      }
     }
   };
   
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    
-    try {
-      // Calculate category scores (0-100 scale)
-      const categoryScores: Record<string, number> = {};
-      const categoryCounts: Record<string, number> = {};
+  const handleBack = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
       
-      // Count occurrences of each category
-      aptitudeQuestions.forEach(q => {
-        const category = q.category;
-        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-      });
-      
-      // Sum up scores by category
-      Object.entries(answers).forEach(([qId, score]) => {
-        const question = aptitudeQuestions.find(q => q.id === parseInt(qId));
-        if (question) {
-          const category = question.category;
-          categoryScores[category] = (categoryScores[category] || 0) + score;
-        }
-      });
-      
-      // Convert to percentage (0-100)
-      Object.keys(categoryScores).forEach(category => {
-        const maxPossible = categoryCounts[category] * 4; // 4 is max score per question
-        categoryScores[category] = Math.round((categoryScores[category] / maxPossible) * 100);
-      });
-      
-      // Save assessment in backend
-      await startAssessment('aptitude');
-      
-      // Complete the test
-      onComplete(categoryScores);
-    } catch (error) {
-      console.error('Error submitting assessment:', error);
-    } finally {
-      setIsSubmitting(false);
+      // Restore previous answer if it exists
+      const previousAnswer = answers[currentQuestionIndex - 1];
+      setCurrentAnswer(previousAnswer !== undefined ? previousAnswer : null);
     }
   };
   
-  const progress = Math.round(((currentQuestion + 1) / aptitudeQuestions.length) * 100);
+  const calculateResults = (answers: Record<number, number>) => {
+    // Initialize category scores
+    const categoryScores: Record<string, number> = {
+      "analytical": 0,
+      "technical": 0,
+      "design": 0,
+      "teamwork": 0,
+      "communication": 0,
+      "time_management": 0,
+      "decision_making": 0,
+      "learning": 0,
+      "motivation": 0
+    };
+    
+    // Track count per category for averaging
+    const categoryCounts: Record<string, number> = {};
+    
+    // Calculate raw scores for each category
+    Object.entries(answers).forEach(([questionIndex, optionIndex]) => {
+      const question = questions[parseInt(questionIndex)];
+      const category = question.category;
+      
+      // Initialize if first question of this category
+      if (categoryCounts[category] === undefined) {
+        categoryCounts[category] = 0;
+        categoryScores[category] = 0;
+      }
+      
+      // Add score based on answer (normalized to 0-1 range)
+      // This is a simple scoring method, could be more sophisticated
+      const score = 1 - (optionIndex / (question.options.length - 1));
+      categoryScores[category] += score;
+      categoryCounts[category]++;
+    });
+    
+    // Average scores by category
+    Object.keys(categoryScores).forEach(category => {
+      if (categoryCounts[category] > 0) {
+        categoryScores[category] = categoryScores[category] / categoryCounts[category];
+      }
+    });
+    
+    // Calculate field scores using category weights
+    const fieldScores: Record<string, number> = {
+      "software_development": 0,
+      "data_science": 0,
+      "ux_design": 0,
+      "project_management": 0,
+      "technical_writing": 0,
+      "cybersecurity": 0,
+      "ai_research": 0
+    };
+    
+    Object.keys(fieldScores).forEach(field => {
+      let weightedSum = 0;
+      let weightSum = 0;
+      
+      Object.entries(categoryScores).forEach(([category, score]) => {
+        const weight = categoryWeights[category]?.[field] || 0;
+        weightedSum += score * weight;
+        weightSum += weight;
+      });
+      
+      if (weightSum > 0) {
+        fieldScores[field] = (weightedSum / weightSum) * 100;
+      }
+    });
+    
+    return fieldScores;
+  };
+  
+  const currentQuestion = questions[currentQuestionIndex];
   
   return (
-    <div className="fixed inset-0 bg-background/80 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Aptitude Assessment</CardTitle>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <CardDescription>
-            Question {currentQuestion + 1} of {aptitudeQuestions.length}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-2xl bg-[#202123] border-[#4D4D4F] text-white">
+        <CardHeader className="relative pb-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute right-4 top-4 text-[#8E8E9E] hover:text-white"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </Button>
+          <CardTitle className="text-xl">Aptitude Assessment</CardTitle>
+          <CardDescription className="text-[#8E8E9E]">
+            Question {currentQuestionIndex + 1} of {questions.length}
           </CardDescription>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1 mt-2" />
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">{aptitudeQuestions[currentQuestion].question}</h3>
-            <RadioGroup onValueChange={handleAnswer}>
-              {aptitudeQuestions[currentQuestion].options.map((option, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`}>{option}</Label>
+        <CardContent className="pt-4">
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4">{currentQuestion.question}</h3>
+            <RadioGroup value={currentAnswer?.toString()} onValueChange={handleAnswerSelect}>
+              {currentQuestion.options.map((option, index) => (
+                <div className="flex items-start space-x-2 mb-3 p-2 rounded hover:bg-[#2b2c2f]" key={index}>
+                  <RadioGroupItem id={`option-${index}`} value={index.toString()} className="mt-1" />
+                  <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
+                    {option}
+                  </Label>
                 </div>
               ))}
             </RadioGroup>
@@ -186,22 +393,19 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
         <CardFooter className="flex justify-between">
           <Button 
             variant="outline" 
-            onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
-            disabled={currentQuestion === 0}
+            onClick={handleBack}
+            disabled={currentQuestionIndex === 0}
+            className="border-[#4D4D4F] text-white hover:bg-[#2b2c2f]"
           >
-            Previous
+            Back
           </Button>
+          
           <Button 
-            onClick={() => {
-              if (currentQuestion < aptitudeQuestions.length - 1) {
-                setCurrentQuestion(prev => prev + 1);
-              } else {
-                handleSubmit();
-              }
-            }}
-            disabled={isSubmitting || !answers[aptitudeQuestions[currentQuestion].id]}
+            onClick={handleContinue}
+            disabled={currentAnswer === null}
+            className="bg-gradient-to-r from-[#1591CF] to-[#C92974]"
           >
-            {currentQuestion < aptitudeQuestions.length - 1 ? 'Skip' : 'Complete Assessment'}
+            {currentQuestionIndex < questions.length - 1 ? 'Continue' : 'Complete Test'}
           </Button>
         </CardFooter>
       </Card>

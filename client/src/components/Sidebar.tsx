@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Chat } from '../types';
-import { Plus, MessageSquare } from 'lucide-react';
+import { Plus, MessageSquare, BrainCog, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LogoSVG from './LogoSVG';
 import { Link, useLocation } from 'wouter';
@@ -55,6 +55,24 @@ const Sidebar: React.FC<SidebarProps> = ({ onNewChat, activeChatId }) => {
               <div className="text-[#8E8E9E] text-xs px-2">No chat history yet</div>
             )
           )}
+        </div>
+      </div>
+      
+      <div className="mb-5">
+        <h3 className="text-[#8E8E9E] text-xs font-medium mb-3 px-2">TOOLS</h3>
+        <div className="flex flex-col gap-2">
+          <Link href="/assessment">
+            <a className="p-2 flex items-center gap-2 cursor-pointer hover:bg-[#2b2c2f] rounded text-xs">
+              <BrainCog size={14} />
+              <span>Career Assessment Test</span>
+            </a>
+          </Link>
+          <Link href="/help">
+            <a className="p-2 flex items-center gap-2 cursor-pointer hover:bg-[#2b2c2f] rounded text-xs">
+              <HelpCircle size={14} />
+              <span>Help & Resources</span>
+            </a>
+          </Link>
         </div>
       </div>
       

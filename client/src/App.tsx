@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "./pages/Home";
 import VirtualAssistant from "./pages/VirtualAssistant";
+import Assessment from "./pages/Assessment";
+import Help from "./pages/Help";
 
 function Router() {
   return (
@@ -12,6 +14,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/chat/:id" component={Home} />
       <Route path="/virtual-assistant" component={VirtualAssistant} />
+      <Route path="/assessment" component={Assessment} />
+      <Route path="/help" component={Help} />
       <Route component={NotFound} />
     </Switch>
   );
