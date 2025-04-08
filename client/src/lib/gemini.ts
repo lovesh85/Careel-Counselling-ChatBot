@@ -1,7 +1,7 @@
 import { ChatMessage } from '../types';
 
 // API key from environment
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCO6Q_LnuY4hBxC4_0gv8C_wUcgdpoOsyM';
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDztXegVFZSPHTK0aIWVqj_BPVx-Olr7oA';
 
 // Updated API URL for the latest version
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';

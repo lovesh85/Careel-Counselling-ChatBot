@@ -1,7 +1,7 @@
 import { ChatMessage } from '@shared/schema';
 
 // API key from environment
-const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCO6Q_LnuY4hBxC4_0gv8C_wUcgdpoOsyM';
+const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDztXegVFZSPHTK0aIWVqj_BPVx-Olr7oA';
 
 // Updated API URL for the latest version
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
@@ -56,53 +56,68 @@ export const getGeminiResponse = async (messages: ChatMessage[]): Promise<string
   try {
     const formattedMessages = formatMessages(messages);
     
-    const response = await fetch(`${BASE_URL}?key=${API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: formattedMessages,
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 1000,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          }
-        ]
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json() as GeminiResponse;
+    // Set a controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
     
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error('No response from Gemini API');
-    }
+    try {
+      const response = await fetch(`${BASE_URL}?key=${API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: formattedMessages,
+          generationConfig: {
+            temperature: 0.7,
+            topP: 0.8,
+            topK: 40,
+            maxOutputTokens: 1000,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
 
-    const messageText = data.candidates[0].content.parts.map(part => part.text).join('');
-    return messageText;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json() as GeminiResponse;
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        throw new Error('No response from Gemini API');
+      }
+
+      const messageText = data.candidates[0].content.parts.map(part => part.text).join('');
+      return messageText;
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error('API request timed out');
+        return "I'm sorry, the request timed out. Please try again with a shorter question.";
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     return "I'm sorry, I'm having trouble connecting to my knowledge base. Please try again in a moment.";
@@ -124,7 +139,8 @@ export const getCareerRecommendations = async (
     Education: ${education}
     ${assessmentResults ? `Assessment Results: ${JSON.stringify(assessmentResults)}` : ''}
     
-    Provide 3-5 career options with descriptions, required skills, and average salary ranges. Format your response as JSON with the following structure:
+    Provide 3-5 career options with descriptions, required skills, and average salary ranges. 
+    IMPORTANT: Format your response as valid JSON with the following structure:
     {
       "careers": [
         {
@@ -135,40 +151,57 @@ export const getCareerRecommendations = async (
           "avgSalary": "Salary range"
         }
       ]
-    }`;
-
-    const response = await fetch(`${BASE_URL}?key=${API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 2000,
-        }
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
-
-    const data = await response.json() as GeminiResponse;
     
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error('No response from Gemini API');
-    }
+    Make sure your response is valid JSON that can be parsed with JSON.parse().`;
 
-    const rawResponse = data.candidates[0].content.parts.map(part => part.text).join('');
-    return rawResponse;
+    // Set a longer timeout for the API call
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    
+    try {
+      const response = await fetch(`${BASE_URL}?key=${API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            role: "user",
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.2,
+            topP: 0.8,
+            topK: 40,
+            maxOutputTokens: 2000,
+          }
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json() as GeminiResponse;
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        throw new Error('No response from Gemini API');
+      }
+
+      const rawResponse = data.candidates[0].content.parts.map(part => part.text).join('');
+      return rawResponse;
+      
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. The server took too long to respond.');
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('Error getting career recommendations:', error);
     throw error;
