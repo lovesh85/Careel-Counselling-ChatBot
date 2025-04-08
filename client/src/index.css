@@ -163,3 +163,17 @@ a,
 .bg-primary {
   transition: all 0.3s ease;
 }
+
+/* Custom glow effect for the logo */
+.shadow-glow {
+  box-shadow: 0 0 15px 2px rgba(128, 0, 255, 0.6),
+              0 0 25px 4px rgba(0, 255, 255, 0.3);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.shadow-glow:hover {
+  box-shadow: 0 0 20px 4px rgba(128, 0, 255, 0.8),
+              0 0 30px 6px rgba(0, 255, 255, 0.5);
+  transform: scale(1.05);
+}

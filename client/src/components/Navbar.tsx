@@ -62,8 +62,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNewChat, activeChatId }) => {
         <div className="flex items-center gap-3">
           <Link href="/">
             <a className="flex items-center gap-2">
-              <LogoSVG width={32} height={32} className="rounded-full" />
-              <span className="font-bold text-lg hidden md:block">Shifra</span>
+              <LogoSVG width={40} height={40} className="shadow-glow" />
+              <span className="font-bold text-lg hidden md:block bg-gradient-to-r from-purple-500 to-cyan-400 bg-clip-text text-transparent">Shifra</span>
             </a>
           </Link>
         </div>
