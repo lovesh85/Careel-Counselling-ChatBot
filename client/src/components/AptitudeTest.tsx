@@ -5,6 +5,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { X } from 'lucide-react';
+import UserInfoModal from './UserInfoModal';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface AptitudeTestProps {
   onClose: () => void;
@@ -245,6 +248,9 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [currentAnswer, setCurrentAnswer] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
+  const [showUserInfoModal, setShowUserInfoModal] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ name: string; email: string } | null>(null);
+  const { toast } = useToast();
   
   useEffect(() => {
     // Calculate progress as a percentage
@@ -257,10 +263,43 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
     setCurrentAnswer(parseInt(value));
   };
   
+  const handleUserInfoSubmit = (info: { name: string; email: string }) => {
+    setUserInfo(info);
+    toast({
+      title: "Information saved",
+      description: `Thanks ${info.name}! We'll keep you updated on new features.`,
+    });
+    
+    // Try to save user info to database
+    saveUserInfo(info);
+  };
+  
+  const saveUserInfo = async (info: { name: string; email: string }) => {
+    try {
+      await apiRequest(
+        'POST',
+        '/api/user',
+        {
+          name: info.name,
+          email: info.email
+        }
+      );
+    } catch (error) {
+      console.error('Error saving user info:', error);
+      // Don't show error to user, just log it
+    }
+  };
+  
   const handleContinue = () => {
     if (currentAnswer !== null) {
       // Save answer
       setAnswers({ ...answers, [currentQuestionIndex]: currentAnswer });
+      
+      // Show user info modal after the 3rd question (index 2)
+      if (currentQuestionIndex === 2 && !userInfo) {
+        setShowUserInfoModal(true);
+        return;
+      }
       
       // Move to next question or complete the test
       if (currentQuestionIndex < questions.length - 1) {
@@ -359,6 +398,26 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
   
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      {/* User Info Modal */}
+      {showUserInfoModal && (
+        <UserInfoModal 
+          onClose={() => {
+            setShowUserInfoModal(false);
+            // Continue to next question even if they skip
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+            setCurrentAnswer(null);
+          }} 
+          onSubmit={(info) => {
+            handleUserInfoSubmit(info);
+            setShowUserInfoModal(false);
+            // Continue to next question after submitting
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+            setCurrentAnswer(null);
+          }}
+        />
+      )}
+      
+      {/* Aptitude Test Card */}
       <Card className="w-full max-w-2xl bg-[#202123] border-[#4D4D4F] text-white">
         <CardHeader className="relative pb-2">
           <Button 

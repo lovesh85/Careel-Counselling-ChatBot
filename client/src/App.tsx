@@ -10,62 +10,64 @@ import Help from "./pages/Help";
 import Navbar from './components/Navbar';
 import React from 'react';
 
-function Router() {
+// Wrapper components for pages with Navbar
+const VirtualAssistantPage = () => {
   const [, navigate] = useLocation();
-  
-  // Function to navigate to home page for a new chat
-  const handleNewChat = () => {
-    navigate('/');
-  };
-  
+  return (
+    <div className="h-screen flex flex-col bg-black text-white">
+      <Navbar onNewChat={() => navigate('/')} />
+      <div className="flex-1 overflow-hidden">
+        <VirtualAssistant />
+      </div>
+    </div>
+  );
+};
+
+const AssessmentPage = () => {
+  const [, navigate] = useLocation();
+  return (
+    <div className="h-screen flex flex-col bg-black text-white">
+      <Navbar onNewChat={() => navigate('/')} />
+      <div className="flex-1 overflow-hidden">
+        <Assessment />
+      </div>
+    </div>
+  );
+};
+
+const HelpPage = () => {
+  const [, navigate] = useLocation();
+  return (
+    <div className="h-screen flex flex-col bg-black text-white">
+      <Navbar onNewChat={() => navigate('/')} />
+      <div className="flex-1 overflow-hidden">
+        <Help />
+      </div>
+    </div>
+  );
+};
+
+const NotFoundPage = () => {
+  const [, navigate] = useLocation();
+  return (
+    <div className="h-screen flex flex-col bg-black text-white">
+      <Navbar onNewChat={() => navigate('/')} />
+      <div className="flex-1 overflow-hidden">
+        <NotFound />
+      </div>
+    </div>
+  );
+};
+
+function Router() {
   return (
     <Switch>
-      <Route path="/">
-        {() => <Home />}
-      </Route>
-      <Route path="/chat/:id">
-        {({params}) => <Home />}
-      </Route>
-      <Route path="/virtual-assistant">
-        {() => (
-          <div className="h-screen flex flex-col bg-black text-white">
-            <Navbar onNewChat={handleNewChat} />
-            <div className="flex-1 overflow-hidden">
-              <VirtualAssistant />
-            </div>
-          </div>
-        )}
-      </Route>
-      <Route path="/assessment">
-        {() => (
-          <div className="h-screen flex flex-col bg-black text-white">
-            <Navbar onNewChat={handleNewChat} />
-            <div className="flex-1 overflow-hidden">
-              <Assessment />
-            </div>
-          </div>
-        )}
-      </Route>
-      <Route path="/help">
-        {() => (
-          <div className="h-screen flex flex-col bg-black text-white">
-            <Navbar onNewChat={handleNewChat} />
-            <div className="flex-1 overflow-hidden">
-              <Help />
-            </div>
-          </div>
-        )}
-      </Route>
-      <Route>
-        {() => (
-          <div className="h-screen flex flex-col bg-black text-white">
-            <Navbar onNewChat={handleNewChat} />
-            <div className="flex-1 overflow-hidden">
-              <NotFound />
-            </div>
-          </div>
-        )}
-      </Route>
+      <Route path="/" component={Home} />
+      <Route path="/chat/:id" component={Home} />
+      <Route path="/virtual-assistant" component={VirtualAssistantPage} />
+      <Route path="/assessment" component={AssessmentPage} />
+      <Route path="/help" component={HelpPage} />
+      <Route component={NotFoundPage} />
     </Switch>
   );
 }
