@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { X, CheckCircle, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { X, CheckCircle, ChevronDown, ChevronUp, Download, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getCareerRecommendations } from '@/lib/gemini';
 
@@ -25,11 +25,37 @@ interface AssessmentResultsProps {
   onClose: () => void;
 }
 
+// Default recommendations when API fails
+const DEFAULT_RECOMMENDATIONS = [
+  {
+    name: "Frontend Developer",
+    description: "Create user interfaces and interactive experiences for web applications using modern JavaScript frameworks.",
+    matchPercentage: 85,
+    skills: ["JavaScript", "React", "CSS", "UI/UX Fundamentals", "Problem Solving"],
+    avgSalary: "$70,000 - $120,000"
+  },
+  {
+    name: "Data Scientist",
+    description: "Analyze complex datasets to extract insights and create predictive models to solve business problems.",
+    matchPercentage: 78,
+    skills: ["Python", "Statistics", "Machine Learning", "Data Visualization", "SQL"],
+    avgSalary: "$85,000 - $140,000"
+  },
+  {
+    name: "UX Designer",
+    description: "Design intuitive and engaging user experiences for digital products based on user research and testing.",
+    matchPercentage: 72,
+    skills: ["User Research", "Wireframing", "Prototyping", "Visual Design", "Usability Testing"],
+    avgSalary: "$65,000 - $110,000"
+  }
+];
+
 export default function AssessmentResults({ assessmentResults, onClose }: AssessmentResultsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [careerRecommendations, setCareerRecommendations] = useState<RecommendedCareer[]>([]);
   const [expandedCareer, setExpandedCareer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUsingFallback, setIsUsingFallback] = useState(false);
   const { toast } = useToast();
   
   const fieldNameMap: Record<string, string> = {
@@ -61,12 +87,58 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
     }))
     .sort((a, b) => b.score - a.score);
   
+  // Generate fallback recommendations with appropriate matching percentages
+  const getFallbackRecommendations = useCallback(() => {
+    return DEFAULT_RECOMMENDATIONS.map(career => {
+      let matchScore = 70; // Default base score
+      
+      // Adjust match score based on skills from assessment
+      if (career.name === "Frontend Developer" && skillScores.find(s => s.name === "Software Development")) {
+        matchScore = skillScores.find(s => s.name === "Software Development")!.score;
+      } else if (career.name === "Data Scientist" && skillScores.find(s => s.name === "Data Science & Analytics")) {
+        matchScore = skillScores.find(s => s.name === "Data Science & Analytics")!.score;
+      } else if (career.name === "UX Designer" && skillScores.find(s => s.name === "UX/UI Design")) {
+        matchScore = skillScores.find(s => s.name === "UX/UI Design")!.score;
+      }
+      
+      return {
+        ...career,
+        matchPercentage: matchScore
+      };
+    });
+  }, [skillScores]);
+  
+  // Handle API errors gracefully
+  const handleApiError = useCallback((errorMessage: string) => {
+    setIsLoading(false);
+    setError(errorMessage);
+    setIsUsingFallback(true);
+    
+    // Generate fallback recommendations
+    const fallbackRecs = getFallbackRecommendations();
+    setCareerRecommendations(fallbackRecs);
+    
+    // Notify user but don't disrupt the experience
+    toast({
+      title: "Notice", 
+      description: "Using locally generated recommendations. Some personalization may be limited.",
+      variant: "default"
+    });
+  }, [getFallbackRecommendations, toast]);
+  
+  // Fetch career recommendations
   useEffect(() => {
-    // Get career recommendations from Gemini API
     const fetchCareerRecommendations = async () => {
+      // Safety check to ensure we have assessment results
+      if (Object.keys(assessmentResults).length === 0) {
+        handleApiError("Missing assessment data. Using general recommendations.");
+        return;
+      }
+      
       try {
         setIsLoading(true);
         setError(null);
+        setIsUsingFallback(false);
         
         // Extract top skills from assessment results
         const skillNames = skillScores.slice(0, 3).map(skill => skill.name);
@@ -75,8 +147,8 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
         const interests = ["technology", "problem-solving", "continuous learning"];
         const education = "College/University";
         
-        // Call the Gemini API
-        let result;
+        // Call the Gemini API with timeout handling
+        let result: string;
         try {
           result = await getCareerRecommendations(
             interests,
@@ -84,10 +156,10 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
             education,
             assessmentResults
           );
-        } catch (apiError) {
+        } catch (apiError: any) {
           console.error('API error:', apiError);
-          // Use fallback data instead of failing
-          throw new Error("Failed to connect to recommendation service");
+          handleApiError(apiError.message || "Failed to connect to recommendation service");
+          return;
         }
         
         // Parse the JSON response
@@ -98,91 +170,39 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
           if (jsonMatch) {
             parsedData = JSON.parse(jsonMatch[0]);
           } else {
-            throw new Error("No valid JSON found in response");
+            throw new Error("Invalid response format");
           }
         } catch (parseError) {
-          console.error("Error parsing Gemini API response:", parseError);
-          // Fallback to default recommendations if parsing fails
-          parsedData = {
-            careers: [
-              {
-                name: "Frontend Developer",
-                description: "Create user interfaces and interactive experiences for web applications using modern JavaScript frameworks.",
-                matchPercentage: skillScores.find(s => s.name === "Software Development")?.score || 75,
-                skills: ["JavaScript", "React", "CSS", "UI/UX Fundamentals", "Problem Solving"],
-                avgSalary: "$70,000 - $120,000"
-              },
-              {
-                name: "Data Scientist",
-                description: "Analyze complex datasets to extract insights and create predictive models to solve business problems.",
-                matchPercentage: skillScores.find(s => s.name === "Data Science & Analytics")?.score || 70,
-                skills: ["Python", "Statistics", "Machine Learning", "Data Visualization", "SQL"],
-                avgSalary: "$85,000 - $140,000"
-              },
-              {
-                name: "UX Designer",
-                description: "Design intuitive and engaging user experiences for digital products based on user research and testing.",
-                matchPercentage: skillScores.find(s => s.name === "UX/UI Design")?.score || 65,
-                skills: ["User Research", "Wireframing", "Prototyping", "Visual Design", "Usability Testing"],
-                avgSalary: "$65,000 - $110,000"
-              }
-            ]
-          };
+          console.error("Error parsing API response:", parseError);
+          handleApiError("Couldn't process career recommendations");
+          return;
         }
         
         // Extract careers from the parsed data
         const recommendations: RecommendedCareer[] = parsedData.careers || [];
         
         if (recommendations.length === 0) {
-          throw new Error("No career recommendations were generated. Please try again.");
+          handleApiError("No career recommendations were generated");
+          return;
         }
         
         // Sort by match percentage
-        const sortedRecommendations = [...recommendations].sort((a, b) => b.matchPercentage - a.matchPercentage);
+        const sortedRecommendations = [...recommendations]
+          .sort((a, b) => b.matchPercentage - a.matchPercentage);
         
         setCareerRecommendations(sortedRecommendations);
         setIsLoading(false);
         
       } catch (error: any) {
-        console.error('Error fetching career recommendations:', error);
-        setIsLoading(false);
-        setError(error.message || "Failed to generate career recommendations");
-        toast({
-          title: "Error",
-          description: error.message || "Failed to get career recommendations. Please try again.",
-          variant: "destructive"
-        });
-        
-        // Add fallback recommendations after error
-        setCareerRecommendations([
-          {
-            name: "Frontend Developer",
-            description: "Create user interfaces and interactive experiences for web applications using modern JavaScript frameworks.",
-            matchPercentage: skillScores.find(s => s.name === "Software Development")?.score || 75,
-            skills: ["JavaScript", "React", "CSS", "UI/UX Fundamentals", "Problem Solving"],
-            avgSalary: "$70,000 - $120,000"
-          },
-          {
-            name: "Data Scientist",
-            description: "Analyze complex datasets to extract insights and create predictive models to solve business problems.",
-            matchPercentage: skillScores.find(s => s.name === "Data Science & Analytics")?.score || 70,
-            skills: ["Python", "Statistics", "Machine Learning", "Data Visualization", "SQL"],
-            avgSalary: "$85,000 - $140,000"
-          },
-          {
-            name: "UX Designer",
-            description: "Design intuitive and engaging user experiences for digital products based on user research and testing.",
-            matchPercentage: skillScores.find(s => s.name === "UX/UI Design")?.score || 65,
-            skills: ["User Research", "Wireframing", "Prototyping", "Visual Design", "Usability Testing"],
-            avgSalary: "$65,000 - $110,000"
-          }
-        ]);
+        console.error('Error in recommendation process:', error);
+        handleApiError(error.message || "An unexpected error occurred");
       }
     };
     
     fetchCareerRecommendations();
-  }, [assessmentResults, skillScores, toast]);
+  }, [assessmentResults, skillScores, handleApiError]);
   
+  // Toggle career expansion
   const toggleCareer = (careerName: string) => {
     if (expandedCareer === careerName) {
       setExpandedCareer(null);
@@ -191,6 +211,7 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
     }
   };
   
+  // Handle downloading results
   const handleDownloadResults = () => {
     try {
       // Create a simple text representation of the results
@@ -259,10 +280,24 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
             <div className="flex flex-col items-center justify-center p-8">
               <div className="w-16 h-16 border-4 border-t-[#1591CF] border-r-[#8E8E9E] border-b-[#C92974] border-l-[#8E8E9E] rounded-full animate-spin mb-4"></div>
               <p className="text-[#8E8E9E]">Analyzing your responses and generating career recommendations...</p>
+              <p className="text-[#8E8E9E] text-xs mt-2">This may take a few moments...</p>
             </div>
           ) : (
             <>
-              <div className="mb-8">
+              {isUsingFallback && (
+                <div className="bg-yellow-900/20 border border-yellow-800 rounded-md p-3 mb-6 flex items-start gap-3">
+                  <AlertCircle className="text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
+                  <div>
+                    <h4 className="text-yellow-400 text-sm font-medium mb-1">Using Local Recommendations</h4>
+                    <p className="text-xs text-yellow-400/80">
+                      We're currently using locally generated career recommendations. For more personalized results, 
+                      please try again later.
+                    </p>
+                  </div>
+                </div>
+              )}
+            
+              <div className="mb-6">
                 <h3 className="text-lg font-medium mb-4">Your Skill Profile</h3>
                 <div className="space-y-4">
                   {skillScores.map((skill) => (
@@ -284,50 +319,56 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
               <div>
                 <h3 className="text-lg font-medium mb-4">Recommended Career Paths</h3>
                 <div className="space-y-3">
-                  {careerRecommendations.map((career) => (
-                    <div key={career.name} className="border border-[#4D4D4F] rounded-md overflow-hidden">
-                      <div 
-                        className="p-3 bg-[#2b2c2f] flex justify-between items-center cursor-pointer hover:bg-[#3b3c3f]"
-                        onClick={() => toggleCareer(career.name)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="h-10 w-1 rounded-full" 
-                            style={{ backgroundColor: skillScores.find(s => s.name === fieldNameMap[Object.keys(assessmentResults).find(key => fieldNameMap[key] === career.name.split(' ')[0]) || ''])?.color || '#1591CF' }}
-                          ></div>
-                          <div>
-                            <h4 className="font-medium">{career.name}</h4>
-                            <div className="flex items-center gap-1 text-xs text-[#8E8E9E]">
-                              <span className="text-white">{career.matchPercentage}% match</span>
-                              <span>•</span>
-                              <span>{career.avgSalary}</span>
+                  {careerRecommendations.length > 0 ? (
+                    careerRecommendations.map((career) => (
+                      <div key={career.name} className="border border-[#4D4D4F] rounded-md overflow-hidden">
+                        <div 
+                          className="p-3 bg-[#2b2c2f] flex justify-between items-center cursor-pointer hover:bg-[#3b3c3f]"
+                          onClick={() => toggleCareer(career.name)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="h-10 w-1 rounded-full" 
+                              style={{ backgroundColor: skillScores.find(s => s.name === fieldNameMap[Object.keys(assessmentResults).find(key => fieldNameMap[key] === career.name.split(' ')[0]) || ''])?.color || '#1591CF' }}
+                            ></div>
+                            <div>
+                              <h4 className="font-medium">{career.name}</h4>
+                              <div className="flex items-center gap-1 text-xs text-[#8E8E9E]">
+                                <span className="text-white">{career.matchPercentage}% match</span>
+                                <span>•</span>
+                                <span>{career.avgSalary}</span>
+                              </div>
                             </div>
                           </div>
+                          {expandedCareer === career.name ? (
+                            <ChevronUp size={18} className="text-[#8E8E9E]" />
+                          ) : (
+                            <ChevronDown size={18} className="text-[#8E8E9E]" />
+                          )}
                         </div>
-                        {expandedCareer === career.name ? (
-                          <ChevronUp size={18} className="text-[#8E8E9E]" />
-                        ) : (
-                          <ChevronDown size={18} className="text-[#8E8E9E]" />
+                        
+                        {expandedCareer === career.name && (
+                          <div className="p-3 border-t border-[#4D4D4F]">
+                            <p className="text-sm mb-3">{career.description}</p>
+                            <div className="mb-3">
+                              <h5 className="text-xs text-[#8E8E9E] mb-1">Key Skills</h5>
+                              <div className="flex flex-wrap gap-1">
+                                {career.skills.map((skill) => (
+                                  <span key={skill} className="text-xs bg-[#3b3c3f] px-2 py-1 rounded">
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
-                      
-                      {expandedCareer === career.name && (
-                        <div className="p-3 border-t border-[#4D4D4F]">
-                          <p className="text-sm mb-3">{career.description}</p>
-                          <div className="mb-3">
-                            <h5 className="text-xs text-[#8E8E9E] mb-1">Key Skills</h5>
-                            <div className="flex flex-wrap gap-1">
-                              {career.skills.map((skill) => (
-                                <span key={skill} className="text-xs bg-[#3b3c3f] px-2 py-1 rounded">
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                    ))
+                  ) : (
+                    <div className="text-center p-4 border border-[#4D4D4F] rounded-md">
+                      <p className="text-[#8E8E9E]">No career recommendations available. Please try again.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
               
@@ -357,7 +398,7 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
           
           <Button 
             onClick={handleDownloadResults}
-            disabled={isLoading}
+            disabled={isLoading || careerRecommendations.length === 0}
             className="flex items-center gap-2 bg-transparent border border-[#1591CF] text-[#1591CF] hover:bg-[#1591CF]/10"
           >
             <Download size={16} />

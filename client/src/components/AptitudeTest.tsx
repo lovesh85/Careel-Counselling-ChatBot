@@ -292,8 +292,9 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
   
   const handleContinue = () => {
     if (currentAnswer !== null) {
-      // Save answer
-      setAnswers({ ...answers, [currentQuestionIndex]: currentAnswer });
+      // Save answer in state, creating a new answers object
+      const updatedAnswers = { ...answers, [currentQuestionIndex]: currentAnswer };
+      setAnswers(updatedAnswers);
       
       // Show user info modal after the 3rd question (index 2)
       if (currentQuestionIndex === 2 && !userInfo) {
@@ -306,9 +307,30 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
         setCurrentQuestionIndex(currentQuestionIndex + 1);
         setCurrentAnswer(null);
       } else {
-        // Calculate results
-        const results = calculateResults(answers);
-        onComplete(results);
+        // Final question answered - calculate results
+        try {
+          // Pass the updated answers instead of relying on state that might not be updated yet
+          const results = calculateResults(updatedAnswers);
+          
+          // Check if results are valid before completing
+          if (Object.keys(results).length === 0) {
+            toast({
+              title: "Error",
+              description: "There was a problem calculating your results. Please try again.",
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          onComplete(results);
+        } catch (error) {
+          console.error("Error calculating results:", error);
+          toast({
+            title: "Error",
+            description: "There was a problem calculating your results. Please try again.",
+            variant: "destructive"
+          });
+        }
       }
     }
   };

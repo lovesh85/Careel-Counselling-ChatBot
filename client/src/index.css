@@ -130,6 +130,24 @@ input.bg-\[\#202123\] {
   background-color: #1591CF !important;
 }
 
+/* Fix loading spinner in light mode */
+.light-theme .animate-spin {
+  border-color: #e5e5e5;
+  border-top-color: #1591CF;
+  border-bottom-color: #C92974;
+}
+
+/* Fix modal content in light mode */
+.light-theme .bg-\[\#202123\].border-\[\#4D4D4F\] {
+  background-color: #f5f5f5 !important;
+  border-color: #d1d1d1 !important;
+  color: #333 !important;
+}
+
+.light-theme .text-\[\#8E8E9E\] {
+  color: #666 !important;
+}
+
 /* Animation for theme transition */
 body, 
 nav, 

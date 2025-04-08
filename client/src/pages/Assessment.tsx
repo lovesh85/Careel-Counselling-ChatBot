@@ -10,6 +10,7 @@ export default function Assessment() {
   const [showAptitudeTest, setShowAptitudeTest] = useState(false);
   const [showAssessmentResults, setShowAssessmentResults] = useState(false);
   const [assessmentResults, setAssessmentResults] = useState<Record<string, number>>({});
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   return (
     <div className="w-full h-full overflow-y-auto p-4 md:p-8 bg-gradient-to-br from-[#1a1a1c] to-[#2d2d31]">
@@ -114,27 +115,45 @@ export default function Assessment() {
         </div>
       </div>
       
-      {/* Test Modals - Only show one at a time */}
-      {showAptitudeTest && (
+      {/* Test Modals - Only show one at a time with transition state handling */}
+      {showAptitudeTest && !isTransitioning && (
         <AptitudeTest 
           onClose={() => setShowAptitudeTest(false)} 
           onComplete={(results) => {
-            // First hide aptitude test, then after a slight delay show results
+            // Enter transition state
+            setIsTransitioning(true);
+            
+            // First hide aptitude test
             setShowAptitudeTest(false);
+            
             // Store results immediately
             setAssessmentResults(results);
-            // Small delay to prevent both modals showing at once
+            
+            // Delayed showing of results to prevent UI conflicts
             setTimeout(() => {
               setShowAssessmentResults(true);
-            }, 100);
+              // Exit transition state after showing results
+              setTimeout(() => {
+                setIsTransitioning(false);
+              }, 100);
+            }, 200);
           }} 
         />
       )}
       
-      {!showAptitudeTest && showAssessmentResults && Object.keys(assessmentResults).length > 0 && (
+      {!showAptitudeTest && showAssessmentResults && Object.keys(assessmentResults).length > 0 && !isTransitioning && (
         <AssessmentResults 
           assessmentResults={assessmentResults}
-          onClose={() => setShowAssessmentResults(false)} 
+          onClose={() => {
+            setShowAssessmentResults(false);
+            // Clear assessment results when closing to prevent state issues
+            // on subsequent assessments
+            setTimeout(() => {
+              if (!showAssessmentResults && !showAptitudeTest) {
+                setAssessmentResults({});
+              }
+            }, 300);
+          }} 
         />
       )}
     </div>
