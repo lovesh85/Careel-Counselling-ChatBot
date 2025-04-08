@@ -76,25 +76,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, onChatCreated }) 
   return (
     <>
       <div className="flex-grow flex flex-col p-4 md:p-6 overflow-hidden">
-        {/* Chat Container */}
-        <div 
-          ref={chatContainerRef}
-          className="flex-grow overflow-y-auto p-4 flex flex-col gap-6 mb-4"
-        >
-          {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))}
-          {isProcessing && (
-            <div className="self-start flex items-center text-[#8E8E9E] gap-2 animate-pulse">
-              <div className="w-2 h-2 bg-[#1591CF] rounded-full"></div>
-              <div className="w-2 h-2 bg-[#1591CF] rounded-full animation-delay-200"></div>
-              <div className="w-2 h-2 bg-[#1591CF] rounded-full animation-delay-400"></div>
-            </div>
-          )}
+        {/* Chat Container - Now with a visible border and fixed height */}
+        <div className="border border-[#4D4D4F] rounded-lg mb-4 flex flex-col h-[60vh]">
+          <div 
+            ref={chatContainerRef}
+            className="flex-grow overflow-y-auto p-4 flex flex-col gap-6"
+          >
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
+            {isProcessing && (
+              <div className="self-start flex items-center text-[#8E8E9E] gap-2 animate-pulse">
+                <div className="w-2 h-2 bg-[#1591CF] rounded-full"></div>
+                <div className="w-2 h-2 bg-[#1591CF] rounded-full animation-delay-200"></div>
+                <div className="w-2 h-2 bg-[#1591CF] rounded-full animation-delay-400"></div>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Input Container */}
-        <div className="relative flex items-center mb-4">
+        <div className="relative flex items-center mb-6">
           <Input
             id="userInput"
             value={currentMessage}
@@ -113,10 +115,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, onChatCreated }) 
           </Button>
         </div>
         
-        {/* Most Asked Questions */}
-        <MostAskedQuestions onQuestionClick={handleQuickOptionClick} disabled={isProcessing} />
+        {/* Most Asked Questions - Moved below input */}
+        <div className="mb-6">
+          <MostAskedQuestions onQuestionClick={handleQuickOptionClick} disabled={isProcessing} />
+        </div>
         
-        {/* Quick Options */}
+        {/* Quick Options - Positioned at the bottom */}
         <div className="mb-4">
           <h3 className="text-[#8E8E9E] text-xs font-medium mb-3">QUICK OPTIONS</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

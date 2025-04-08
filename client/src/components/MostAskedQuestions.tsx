@@ -21,13 +21,13 @@ const MostAskedQuestions: React.FC<MostAskedQuestionsProps> = ({ onQuestionClick
   ]);
 
   return (
-    <div className="w-full mb-4">
+    <div className="w-full">
       <h3 className="text-[#8E8E9E] text-xs font-medium mb-3 flex items-center gap-2">
         <MessageCircle size={14} />
         MOST ASKED QUESTIONS
       </h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {questions.map((question, index) => (
           <Button
             key={index}
