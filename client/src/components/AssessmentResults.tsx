@@ -277,20 +277,21 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
         </CardHeader>
         
         <CardContent className="flex-1 overflow-y-auto py-4">
-          {/* We've removed the loading state since we now have a dedicated completion message */}
+          {/* We display content immediately without loading states */}
           <>
-            {isUsingFallback && (
-                <div className="bg-yellow-900/20 border border-yellow-800 rounded-md p-3 mb-6 flex items-start gap-3">
-                  <AlertCircle className="text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
-                  <div>
-                    <h4 className="text-yellow-400 text-sm font-medium mb-1">Using Local Recommendations</h4>
-                    <p className="text-xs text-yellow-400/80">
-                      We're currently using locally generated career recommendations. For more personalized results, 
-                      please try again later.
-                    </p>
-                  </div>
+            {/* Only show the fallback message if we're actually using fallback data and not during initial load */}
+            {isUsingFallback && !isLoading && careerRecommendations.length > 0 && (
+              <div className="bg-yellow-900/20 border border-yellow-800 rounded-md p-3 mb-6 flex items-start gap-3">
+                <AlertCircle className="text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
+                <div>
+                  <h4 className="text-yellow-400 text-sm font-medium mb-1">Using Local Recommendations</h4>
+                  <p className="text-xs text-yellow-400/80">
+                    We're using locally generated career recommendations. For more personalized results, 
+                    please try again later.
+                  </p>
                 </div>
-              )}
+              </div>
+            )}
             
               <div className="mb-6">
                 <h3 className="text-lg font-medium mb-4">Your Skill Profile</h3>
