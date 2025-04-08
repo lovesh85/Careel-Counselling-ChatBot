@@ -1,0 +1,86 @@
+Career Counselling Chatbot
+1. 🎯 Objective
+To develop an AI-powered chatbot that helps students and professionals explore suitable
+career paths based on their interests, strengths, qualifications, and personality traits.
+2. 👥 Target Audience
+ High school students (Class 9–12)
+ College students
+ Job seekers
+ Career switchers
+3. Core Features
+ Stream and career suggestion
+ Personality & aptitude test integration
+ Industry trends and role explanations
+ Course and college recommendation
+ Resume and portfolio advice
+ Guidance on certifications, internships, and jobs
+4. User Stories
+ID As a... I want to... So that...
+CC1 Student Get guidance for subject and stream I can choose my future
+wisely
+CC2 Graduate Know which jobs fit my profile I can prepare for them
+accordingly
+CC3 Parent Check suitable careers for my child I can support them better
+CC4 Counselor Assist students with instant advice I can reduce manual load
+5. Functional Requirements
+ AI-based chat interface
+ Questionnaire: Interests, values, skills
+ Personality and aptitude test (MCQ format)
+ Dashboard showing suggested career paths
+ Export recommendations via email/PDF
+ FAQ module for common doubts
+6. Non-Functional Requirements
+ Response time < 2 seconds
+ High availability (99.9%)
+ Data privacy (GDPR compliant)
+ Mobile responsive
+7. Modules
+Module Description
+Chat Module NLP-based interaction
+Career Engine Suggests paths using interest + aptitude
+Test Engine Conducts skill/personality assessments
+Result Viewer Visualizes career matches
+Export Module Downloads/shares recommendations
+Admin Panel Manage test questions and data
+8. Success Metrics
+ % of students who follow career path
+ % increase in engagement over time
+ Feedback score (NPS or CSAT)
+ Accuracy of career match based on user feedback
+Frontend
+Technology Purpose
+React.js or Vue.js or Simple HTML Responsive and dynamic web UI
+Tailwind CSS or Bootstrap Styling and layout
+Flutter (optional) For cross-platform mobile app (iOS + Android)
+Chart.js or Recharts Display personality/aptitude test results visually
+Backend / Server
+Technology Purpose
+Node.js + Express.js REST API & chatbot backend
+Python (Flask or FastAPI) For custom ML logic
+Google Cloud SDK (Vertex AI / Gemini SDK) To call Gemini API securely
+Socket.IO Real-time messaging/chat (optional)
+🗃Database
+Technology Purpose
+MongoDB or PostgreSQL Stores user data, chat logs, assessments
+Redis (optional) For caching frequent career suggestions or test results
+AI / NLP / Recommendation Engine
+Technology Purpose
+OpenAI GPT-4 / Claude / Cohere AP/
+gemini For natural career conversations
+scikit-learn / TensorFlow / PyTorch Custom career prediction models based on test scores
+Psychometric APIs Integrate for interest/aptitude/personality
+assessments
+Database Schema Design (ERD Overview)
+Career Counselling Chatbot – Key Tables
+ Users
+ id, name, email, age, education_level, interests
+ CareerSuggestions
+ id, user_id (FK), recommended_paths (JSON), date_generated
+ Quizzes
+ id, user_id (FK), type (aptitude/personality), score, answers (JSON)
+ Careers
+ id, name, description, required_skills, avg_salary, industries
+ Courses
+ id, career_id (FK), course_name, provider_name, link
+ ChatLogs
+ id, user_id (FK), message, response, timestamp
