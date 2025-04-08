@@ -22,6 +22,9 @@
   --btn-border: #4D4D4F;
   --btn-hover: #2b2c2f;
   --text-muted: #8E8E9E;
+  --input-bg: #202123;
+  --chat-box-bg: #202123;
+  --nav-bg: #202123;
 }
 
 /* Light theme */
@@ -34,6 +37,9 @@
   --btn-border: #d1d1d6;
   --btn-hover: #ebebeb;
   --text-muted: #6e6e73;
+  --input-bg: #ffffff;
+  --chat-box-bg: #ffffff;
+  --nav-bg: #ffffff;
 }
 
 /* Apply the theme variables */
@@ -42,23 +48,100 @@ body {
   color: var(--foreground);
 }
 
+/* Navigation */
+nav.bg-\[\#202123\] {
+  background-color: var(--nav-bg) !important;
+}
+
+/* Card and container backgrounds */
 .bg-\[\#202123\] {
   background-color: var(--card-bg) !important;
 }
 
+/* Border colors */
 .border-\[\#4D4D4F\] {
   border-color: var(--card-border) !important;
 }
 
+/* Hover states */
 .hover\:bg-\[\#2b2c2f\]:hover {
   background-color: var(--btn-hover) !important;
 }
 
+/* Text colors */
 .text-\[\#8E8E9E\] {
   color: var(--text-muted) !important;
 }
 
+.text-white {
+  color: var(--foreground) !important;
+}
+
+/* Input fields */
+input.bg-\[\#202123\] {
+  background-color: var(--input-bg) !important;
+  color: var(--foreground) !important;
+}
+
+/* Chat container */
+.light-theme .border-\[\#4D4D4F\].rounded-lg {
+  background-color: var(--chat-box-bg) !important;
+}
+
+/* Button text */
+.light-theme button {
+  color: var(--foreground);
+}
+
+.light-theme a {
+  color: var(--foreground);
+}
+
+/* Chat messages */
+.light-theme .chat-assistant-message {
+  background-color: #f0f0f0 !important;
+  color: #202123 !important;
+}
+
+/* Fix the gradient buttons to maintain white text in light mode */
+.bg-gradient-to-r {
+  color: white !important;
+}
+
+/* Fix specific components for light mode */
+.light-theme .bg-\[\#2b2c2f\] {
+  background-color: #ebebeb !important;
+}
+
+/* For non-gradient buttons and specific overrides */
+.light-theme button.bg-\[\#202123\] {
+  background-color: var(--btn-bg) !important;
+  color: var(--foreground) !important;
+  border-color: var(--btn-border) !important;
+}
+
+/* Fix MostAskedQuestions buttons */
+.light-theme button.bg-\[\#202123\].border-\[\#4D4D4F\] {
+  color: var(--foreground) !important;
+}
+
+/* Fix progress bar */
+.light-theme .bg-primary {
+  background-color: #1591CF !important;
+}
+
 /* Animation for theme transition */
-body, .bg-\[\#202123\], .border-\[\#4D4D4F\], .text-white, .text-\[\#8E8E9E\] {
+body, 
+nav, 
+.bg-\[\#202123\], 
+.border-\[\#4D4D4F\], 
+.text-white, 
+.text-\[\#8E8E9E\],
+button,
+input,
+a,
+.bg-\[\#2b2c2f\],
+.bg-\[\#444654\],
+.bg-primary {
   transition: all 0.3s ease;
 }

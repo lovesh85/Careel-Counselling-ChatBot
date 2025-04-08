@@ -22,7 +22,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         className={`max-w-[80%] p-4 rounded-2xl ${
           isUser 
             ? 'bg-gradient-to-r from-[#1591CF] to-[#C92974] text-white' 
-            : 'bg-[#444654] text-white'
+            : 'bg-[#444654] text-white chat-assistant-message'
         }`}
       >
         <p className="whitespace-pre-wrap">{message.content}</p>
