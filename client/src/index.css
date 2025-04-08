@@ -11,3 +11,54 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Default dark theme */
+:root {
+  --background: #121212;
+  --foreground: #ffffff;
+  --card-bg: #202123;
+  --card-border: #4D4D4F;
+  --btn-bg: #202123;
+  --btn-border: #4D4D4F;
+  --btn-hover: #2b2c2f;
+  --text-muted: #8E8E9E;
+}
+
+/* Light theme */
+.light-theme {
+  --background: #f5f5f7;
+  --foreground: #202123;
+  --card-bg: #ffffff;
+  --card-border: #e5e5e5;
+  --btn-bg: #f5f5f7;
+  --btn-border: #d1d1d6;
+  --btn-hover: #ebebeb;
+  --text-muted: #6e6e73;
+}
+
+/* Apply the theme variables */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.bg-\[\#202123\] {
+  background-color: var(--card-bg) !important;
+}
+
+.border-\[\#4D4D4F\] {
+  border-color: var(--card-border) !important;
+}
+
+.hover\:bg-\[\#2b2c2f\]:hover {
+  background-color: var(--btn-hover) !important;
+}
+
+.text-\[\#8E8E9E\] {
+  color: var(--text-muted) !important;
+}
+
+/* Animation for theme transition */
+body, .bg-\[\#202123\], .border-\[\#4D4D4F\], .text-white, .text-\[\#8E8E9E\] {
+  transition: all 0.3s ease;
+}

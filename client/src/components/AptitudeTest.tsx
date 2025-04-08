@@ -439,7 +439,11 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
             <h3 className="text-lg font-medium mb-4">{currentQuestion.question}</h3>
             <RadioGroup value={currentAnswer?.toString()} onValueChange={handleAnswerSelect}>
               {currentQuestion.options.map((option, index) => (
-                <div className="flex items-start space-x-2 mb-3 p-2 rounded hover:bg-[#2b2c2f]" key={index}>
+                <div 
+                  className="flex items-start space-x-2 mb-3 p-2 rounded hover:bg-[#2b2c2f] cursor-pointer" 
+                  key={index}
+                  onClick={() => handleAnswerSelect(index.toString())}
+                >
                   <RadioGroupItem id={`option-${index}`} value={index.toString()} className="mt-1" />
                   <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
                     {option}

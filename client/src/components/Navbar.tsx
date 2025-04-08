@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Menu, X, MessageSquare, BrainCog, HelpCircle, User, ChevronDown, PanelLeft } from 'lucide-react';
+import { Menu, X, MessageSquare, BrainCog, HelpCircle, User, ChevronDown, PanelLeft, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LogoSVG from './LogoSVG';
 import { useQuery } from '@tanstack/react-query';
 import { Chat } from '../types';
+import { useToast } from '@/hooks/use-toast';
 
 interface NavbarProps {
   onNewChat: () => void;
@@ -15,11 +16,35 @@ const Navbar: React.FC<NavbarProps> = ({ onNewChat, activeChatId }) => {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [showChatHistory, setShowChatHistory] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const { toast } = useToast();
   
   // Fetch chat history
   const { data: chats, isLoading } = useQuery<Chat[]>({
     queryKey: ['/api/chat'],
   });
+  
+  // Theme toggle functionality
+  useEffect(() => {
+    // Initialize theme from localStorage if available
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setIsDarkTheme(savedTheme === 'dark');
+      document.documentElement.classList.toggle('light-theme', savedTheme === 'light');
+    }
+  }, []);
+  
+  const toggleTheme = () => {
+    const newTheme = isDarkTheme ? 'light' : 'dark';
+    setIsDarkTheme(!isDarkTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('light-theme', newTheme === 'light');
+    
+    toast({
+      title: `${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme enabled`,
+      description: "Your preference has been saved.",
+    });
+  };
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -122,6 +147,17 @@ const Navbar: React.FC<NavbarProps> = ({ onNewChat, activeChatId }) => {
               <span>Virtual Assistant</span>
             </a>
           </Link>
+          
+          {/* Theme Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="rounded-full w-9 h-9 p-0"
+            title={isDarkTheme ? "Switch to light theme" : "Switch to dark theme"}
+          >
+            {isDarkTheme ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
         </div>
 
         {/* Mobile Menu Button (visible only on small screens) */}
@@ -216,6 +252,18 @@ const Navbar: React.FC<NavbarProps> = ({ onNewChat, activeChatId }) => {
                 <span>Virtual Assistant</span>
               </a>
             </Link>
+            
+            {/* Theme Toggle for Mobile */}
+            <div 
+              className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-[#2b2c2f] cursor-pointer"
+              onClick={() => {
+                toggleTheme();
+                setIsOpen(false);
+              }}
+            >
+              {isDarkTheme ? <Sun size={16} /> : <Moon size={16} />}
+              <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>
+            </div>
           </div>
         </div>
       )}
