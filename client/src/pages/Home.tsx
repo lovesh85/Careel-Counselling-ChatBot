@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import WelcomeScreen from '../components/WelcomeScreen';
-import Sidebar from '../components/Sidebar';
+import Navbar from '../components/Navbar';
 import ChatInterface from '../components/ChatInterface';
 import { useParams } from 'wouter';
 
@@ -31,12 +31,14 @@ const Home: React.FC = () => {
       {showWelcome ? (
         <WelcomeScreen onStart={handleStart} />
       ) : (
-        <div className="h-screen flex flex-col md:flex-row bg-black text-white">
-          <Sidebar onNewChat={handleNewChat} activeChatId={chatId} />
-          <ChatInterface 
-            chatId={chatId} 
-            onChatCreated={handleChatCreated} 
-          />
+        <div className="h-screen flex flex-col bg-black text-white">
+          <Navbar onNewChat={handleNewChat} activeChatId={chatId} />
+          <div className="flex-1 overflow-hidden">
+            <ChatInterface 
+              chatId={chatId} 
+              onChatCreated={handleChatCreated} 
+            />
+          </div>
         </div>
       )}
     </>

@@ -9,6 +9,7 @@ import { useChat } from '../hooks/useChat';
 import AptitudeTest from './AptitudeTest';
 import AssessmentResults from './AssessmentResults';
 import CareerDashboard from './CareerDashboard';
+import MostAskedQuestions from './MostAskedQuestions';
 
 interface ChatInterfaceProps {
   chatId?: number;
@@ -115,6 +116,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, onChatCreated }) 
             <SendIcon size={18} />
           </Button>
         </div>
+        
+        {/* Most Asked Questions */}
+        <MostAskedQuestions onQuestionClick={handleQuickOptionClick} disabled={isProcessing} />
         
         {/* Quick Options */}
         <div className="mb-4">

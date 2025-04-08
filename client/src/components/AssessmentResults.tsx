@@ -122,10 +122,10 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
         }
         
         // Extract careers from the parsed data
-        const recommendations = parsedData.careers || [];
+        const recommendations: RecommendedCareer[] = parsedData.careers || [];
         
         // Sort by match percentage
-        const sortedRecommendations = recommendations.sort((a, b) => b.matchPercentage - a.matchPercentage);
+        const sortedRecommendations = [...recommendations].sort((a, b) => b.matchPercentage - a.matchPercentage);
         
         setCareerRecommendations(sortedRecommendations);
         setIsLoading(false);

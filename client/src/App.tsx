@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,16 +7,65 @@ import Home from "./pages/Home";
 import VirtualAssistant from "./pages/VirtualAssistant";
 import Assessment from "./pages/Assessment";
 import Help from "./pages/Help";
+import Navbar from './components/Navbar';
+import React from 'react';
 
 function Router() {
+  const [, navigate] = useLocation();
+  
+  // Function to navigate to home page for a new chat
+  const handleNewChat = () => {
+    navigate('/');
+  };
+  
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/chat/:id" component={Home} />
-      <Route path="/virtual-assistant" component={VirtualAssistant} />
-      <Route path="/assessment" component={Assessment} />
-      <Route path="/help" component={Help} />
-      <Route component={NotFound} />
+      <Route path="/">
+        {() => <Home />}
+      </Route>
+      <Route path="/chat/:id">
+        {({params}) => <Home />}
+      </Route>
+      <Route path="/virtual-assistant">
+        {() => (
+          <div className="h-screen flex flex-col bg-black text-white">
+            <Navbar onNewChat={handleNewChat} />
+            <div className="flex-1 overflow-hidden">
+              <VirtualAssistant />
+            </div>
+          </div>
+        )}
+      </Route>
+      <Route path="/assessment">
+        {() => (
+          <div className="h-screen flex flex-col bg-black text-white">
+            <Navbar onNewChat={handleNewChat} />
+            <div className="flex-1 overflow-hidden">
+              <Assessment />
+            </div>
+          </div>
+        )}
+      </Route>
+      <Route path="/help">
+        {() => (
+          <div className="h-screen flex flex-col bg-black text-white">
+            <Navbar onNewChat={handleNewChat} />
+            <div className="flex-1 overflow-hidden">
+              <Help />
+            </div>
+          </div>
+        )}
+      </Route>
+      <Route>
+        {() => (
+          <div className="h-screen flex flex-col bg-black text-white">
+            <Navbar onNewChat={handleNewChat} />
+            <div className="flex-1 overflow-hidden">
+              <NotFound />
+            </div>
+          </div>
+        )}
+      </Route>
     </Switch>
   );
 }
