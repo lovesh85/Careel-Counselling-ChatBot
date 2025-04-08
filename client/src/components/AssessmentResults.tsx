@@ -51,7 +51,8 @@ const DEFAULT_RECOMMENDATIONS = [
 ];
 
 export default function AssessmentResults({ assessmentResults, onClose }: AssessmentResultsProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  // We'll initialize isLoading to false since we now use a dedicated completion message
+  const [isLoading, setIsLoading] = useState(false);
   const [careerRecommendations, setCareerRecommendations] = useState<RecommendedCareer[]>([]);
   const [expandedCareer, setExpandedCareer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -276,15 +277,9 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
         </CardHeader>
         
         <CardContent className="flex-1 overflow-y-auto py-4">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center p-8">
-              <div className="w-16 h-16 border-4 border-t-[#1591CF] border-r-[#8E8E9E] border-b-[#C92974] border-l-[#8E8E9E] rounded-full animate-spin mb-4"></div>
-              <p className="text-[#8E8E9E]">Analyzing your responses and generating career recommendations...</p>
-              <p className="text-[#8E8E9E] text-xs mt-2">This may take a few moments...</p>
-            </div>
-          ) : (
-            <>
-              {isUsingFallback && (
+          {/* We've removed the loading state since we now have a dedicated completion message */}
+          <>
+            {isUsingFallback && (
                 <div className="bg-yellow-900/20 border border-yellow-800 rounded-md p-3 mb-6 flex items-start gap-3">
                   <AlertCircle className="text-yellow-400 flex-shrink-0 mt-0.5" size={18} />
                   <div>
@@ -383,8 +378,7 @@ export default function AssessmentResults({ assessmentResults, onClose }: Assess
                   <li>Take additional assessments to refine your recommendations</li>
                 </ul>
               </div>
-            </>
-          )}
+          </>
         </CardContent>
         
         <CardFooter className="flex justify-between border-t border-[#4D4D4F] pt-4">
