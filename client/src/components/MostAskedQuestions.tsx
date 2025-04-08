@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
 
@@ -8,7 +8,8 @@ interface MostAskedQuestionsProps {
 }
 
 const MostAskedQuestions: React.FC<MostAskedQuestionsProps> = ({ onQuestionClick, disabled }) => {
-  const questions = [
+  // Define questions within the component - this ensures they don't disappear
+  const [questions] = useState([
     "What are the highest paying careers for 2024?",
     "Which careers are best for work-life balance?",
     "What careers are suitable for introverts?",
@@ -17,7 +18,7 @@ const MostAskedQuestions: React.FC<MostAskedQuestionsProps> = ({ onQuestionClick
     "Best universities for computer science?",
     "Is an MBA worth it in today's economy?",
     "Best programming languages for beginners?"
-  ];
+  ]);
 
   return (
     <div className="w-full mb-4">

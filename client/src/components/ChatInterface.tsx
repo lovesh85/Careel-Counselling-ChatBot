@@ -54,10 +54,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, onChatCreated }) 
       if (currentMessage.toLowerCase().includes('aptitude test') || 
           currentMessage.toLowerCase().includes('assessment')) {
         setTimeout(() => setShowAptitudeTest(true), 1000);
-      } else if (currentMessage.toLowerCase().includes('career') || 
-                currentMessage.toLowerCase().includes('job opportunities')) {
-        setTimeout(() => setShowCareerDashboard(true), 1000);
       }
+      // Removed career dashboard modal popup
     }
   };
   
@@ -70,10 +68,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, onChatCreated }) 
       if (text.toLowerCase().includes('aptitude test') || 
           text.toLowerCase().includes('assessment')) {
         setTimeout(() => setShowAptitudeTest(true), 1000);
-      } else if (text.toLowerCase().includes('career') || 
-                text.toLowerCase().includes('job')) {
-        setTimeout(() => setShowCareerDashboard(true), 1000);
       }
+      // Removed career dashboard modal popup
     }
   };
   

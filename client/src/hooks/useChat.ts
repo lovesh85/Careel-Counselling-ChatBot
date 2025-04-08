@@ -127,7 +127,8 @@ export function useChat(chatId?: number) {
         timestamp: new Date().toISOString()
       };
       
-      setMessages([...updatedMessages, assistantMessage]);
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
       
       // Save AI message to database
       await sendMessageMutation.mutateAsync({
