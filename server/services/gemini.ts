@@ -3,7 +3,8 @@ import { ChatMessage } from '@shared/schema';
 // API key from environment
 const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCO6Q_LnuY4hBxC4_0gv8C_wUcgdpoOsyM';
 
-const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+// Updated API URL for the latest version
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
 
 // System prompt for career counseling
 const SYSTEM_PROMPT = `You are SHIFRA, an AI-powered career counseling assistant. Your primary role is to help students and professionals 

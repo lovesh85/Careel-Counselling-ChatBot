@@ -30,13 +30,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/chat/:id/message', createChatMessage);
   
   // Assessment routes
-  app.get('/api/assessment', getUserAssessments);
-  app.post('/api/assessment', createAssessment);
+  app.get('/api/assessments', getUserAssessments);
+  app.post('/api/assessments', createAssessment);
   
   // Career routes
   app.get('/api/careers', getCareers);
-  app.get('/api/careers/:id/courses', getCareerCourses);
-  app.get('/api/career-suggestions', createCareerSuggestions);
+  app.get('/api/careers/:careerId/courses', getCareerCourses);
+  app.post('/api/career-suggestions', createCareerSuggestions);
   app.get('/api/career-suggestions/latest', getLatestCareerSuggestions);
   
   // Quick options

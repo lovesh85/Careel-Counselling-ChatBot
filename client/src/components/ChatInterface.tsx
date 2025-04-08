@@ -7,6 +7,7 @@ import ChatMessage from './ChatMessage';
 import { QuickOption } from '../types';
 import { useChat } from '../hooks/useChat';
 import AptitudeTest from './AptitudeTest';
+import AssessmentResults from './AssessmentResults';
 import CareerDashboard from './CareerDashboard';
 
 interface ChatInterfaceProps {
@@ -17,6 +18,8 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, onChatCreated }) => {
   const [showAptitudeTest, setShowAptitudeTest] = useState(false);
   const [showCareerDashboard, setShowCareerDashboard] = useState(false);
+  const [showAssessmentResults, setShowAssessmentResults] = useState(false);
+  const [assessmentResults, setAssessmentResults] = useState<Record<string, number>>({});
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   const { 
@@ -173,10 +176,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, onChatCreated }) 
       {showAptitudeTest && (
         <AptitudeTest 
           onClose={() => setShowAptitudeTest(false)} 
-          onComplete={() => {
+          onComplete={(results) => {
             setShowAptitudeTest(false);
-            setShowCareerDashboard(true);
+            setAssessmentResults(results);
+            setShowAssessmentResults(true);
+            
+            // Add a message to the chat about completing the assessment
+            sendMessage("I've completed the aptitude assessment. What do my results show about suitable career paths?");
           }} 
+        />
+      )}
+      
+      {/* Assessment Results Modal */}
+      {showAssessmentResults && (
+        <AssessmentResults 
+          assessmentResults={assessmentResults}
+          onClose={() => setShowAssessmentResults(false)} 
         />
       )}
       

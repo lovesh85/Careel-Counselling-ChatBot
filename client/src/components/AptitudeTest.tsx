@@ -1,123 +1,210 @@
-import React from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { useAssessment } from '../hooks/useAssessment';
+import { Progress } from '@/components/ui/progress';
+import { useAssessment } from '@/hooks/useAssessment';
 import { X } from 'lucide-react';
 
 interface AptitudeTestProps {
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (results: Record<string, number>) => void;
 }
 
-const AptitudeTest: React.FC<AptitudeTestProps> = ({ onClose, onComplete }) => {
-  const {
-    assessmentType,
-    currentQuestion,
-    currentQuestionIndex,
-    totalQuestions,
-    progress,
-    answers,
-    answerQuestion,
-    nextQuestion,
-    previousQuestion,
-    isComplete,
-    isLoading,
-    startAssessment
-  } = useAssessment();
+// Sample questions for the aptitude assessment
+const aptitudeQuestions = [
+  {
+    id: 1,
+    question: "I enjoy solving complex problems and puzzles.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "analytical"
+  },
+  {
+    id: 2,
+    question: "I find it easy to understand abstract concepts and theories.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "analytical"
+  },
+  {
+    id: 3,
+    question: "I am good at organizing information and creating systems.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "organizational"
+  },
+  {
+    id: 4,
+    question: "I enjoy working with numbers and statistical data.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "mathematical"
+  },
+  {
+    id: 5,
+    question: "I find it easy to express my ideas through writing.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "verbal"
+  },
+  {
+    id: 6,
+    question: "I am comfortable speaking in front of groups.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "verbal"
+  },
+  {
+    id: 7,
+    question: "I enjoy creating visual designs or artwork.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "creative"
+  },
+  {
+    id: 8,
+    question: "I'm good at understanding how mechanical or technical things work.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "technical"
+  },
+  {
+    id: 9,
+    question: "I enjoy helping others and solving their problems.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "interpersonal"
+  },
+  {
+    id: 10,
+    question: "I am good at influencing people and negotiating.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "interpersonal"
+  },
+  {
+    id: 11,
+    question: "I can quickly learn new software or digital tools.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "technical"
+  },
+  {
+    id: 12,
+    question: "I enjoy coming up with innovative solutions to problems.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    category: "creative"
+  },
+];
 
-  // Handle test completion
-  React.useEffect(() => {
-    if (isComplete && !isLoading) {
-      onComplete();
+export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps) {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { startAssessment } = useAssessment();
+  
+  const handleAnswer = (value: string) => {
+    // Convert string value to number (0-4)
+    const score = aptitudeQuestions[currentQuestion].options.indexOf(value);
+    
+    setAnswers(prev => ({
+      ...prev,
+      [aptitudeQuestions[currentQuestion].id]: score
+    }));
+    
+    // Move to next question or submit if last question
+    if (currentQuestion < aptitudeQuestions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    } else {
+      handleSubmit();
     }
-  }, [isComplete, isLoading, onComplete]);
-
-  // Start personality assessment by default
-  React.useEffect(() => {
-    startAssessment('personality');
-  }, [startAssessment]);
-
+  };
+  
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Calculate category scores (0-100 scale)
+      const categoryScores: Record<string, number> = {};
+      const categoryCounts: Record<string, number> = {};
+      
+      // Count occurrences of each category
+      aptitudeQuestions.forEach(q => {
+        const category = q.category;
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      });
+      
+      // Sum up scores by category
+      Object.entries(answers).forEach(([qId, score]) => {
+        const question = aptitudeQuestions.find(q => q.id === parseInt(qId));
+        if (question) {
+          const category = question.category;
+          categoryScores[category] = (categoryScores[category] || 0) + score;
+        }
+      });
+      
+      // Convert to percentage (0-100)
+      Object.keys(categoryScores).forEach(category => {
+        const maxPossible = categoryCounts[category] * 4; // 4 is max score per question
+        categoryScores[category] = Math.round((categoryScores[category] / maxPossible) * 100);
+      });
+      
+      // Save assessment in backend
+      await startAssessment('aptitude');
+      
+      // Complete the test
+      onComplete(categoryScores);
+    } catch (error) {
+      console.error('Error submitting assessment:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const progress = Math.round(((currentQuestion + 1) / aptitudeQuestions.length) * 100);
+  
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-[#202123] border border-[#4D4D4F] rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">
-            {assessmentType === 'personality' ? 'Career Personality Assessment' : 'Career Aptitude Assessment'}
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="p-2 hover:bg-[#444654]/30 rounded-full"
-          >
-            <X size={24} />
-          </Button>
-        </div>
-        
-        {/* Progress indicator */}
-        <div className="mb-6">
-          <div className="flex justify-between text-xs mb-2">
-            <span>Question {currentQuestionIndex + 1} of {totalQuestions}</span>
-            <span>{Math.round(progress)}% Complete</span>
+    <div className="fixed inset-0 bg-background/80 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Aptitude Assessment</CardTitle>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Progress value={progress} className="h-2 bg-[#444654]/30">
-            <div className="h-full bg-gradient-to-r from-[#1591CF] to-[#C92974] rounded-full" style={{ width: `${progress}%` }}></div>
-          </Progress>
-        </div>
-        
-        {/* Current question */}
-        {currentQuestion && (
-          <div className="mb-8">
-            <h3 className="text-lg mb-4">{currentQuestion.question}</h3>
-            <RadioGroup
-              value={answers[currentQuestion.id] || ''}
-              onValueChange={answerQuestion}
-              className="flex flex-col gap-3"
-            >
-              {currentQuestion.options.map((option, index) => (
-                <div
-                  key={index}
-                  className="flex items-center p-3 border border-[#4D4D4F] rounded-lg cursor-pointer hover:bg-[#444654]/20 transition-colors"
-                >
-                  <RadioGroupItem
-                    value={option}
-                    id={`option-${currentQuestion.id}-${index}`}
-                    className="mr-3"
-                  />
-                  <Label
-                    htmlFor={`option-${currentQuestion.id}-${index}`}
-                    className="cursor-pointer flex-grow"
-                  >
-                    {option}
-                  </Label>
+          <CardDescription>
+            Question {currentQuestion + 1} of {aptitudeQuestions.length}
+          </CardDescription>
+          <Progress value={progress} className="h-2" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium">{aptitudeQuestions[currentQuestion].question}</h3>
+            <RadioGroup onValueChange={handleAnswer}>
+              {aptitudeQuestions[currentQuestion].options.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option} id={`option-${index}`} />
+                  <Label htmlFor={`option-${index}`}>{option}</Label>
                 </div>
               ))}
             </RadioGroup>
           </div>
-        )}
-        
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={previousQuestion}
-            disabled={currentQuestionIndex === 0}
-            className="px-4 py-2 border border-[#4D4D4F] hover:bg-[#444654]/30 transition-colors"
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
+            disabled={currentQuestion === 0}
           >
             Previous
           </Button>
-          <Button
-            onClick={nextQuestion}
-            disabled={!answers[currentQuestion?.id || 0] || isLoading}
-            className="px-6 py-2 bg-gradient-to-r from-[#1591CF] to-[#C92974] rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
+          <Button 
+            onClick={() => {
+              if (currentQuestion < aptitudeQuestions.length - 1) {
+                setCurrentQuestion(prev => prev + 1);
+              } else {
+                handleSubmit();
+              }
+            }}
+            disabled={isSubmitting || !answers[aptitudeQuestions[currentQuestion].id]}
           >
-            {currentQuestionIndex === totalQuestions - 1 ? 'Finish' : 'Next'}
+            {currentQuestion < aptitudeQuestions.length - 1 ? 'Skip' : 'Complete Assessment'}
           </Button>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
-};
-
-export default AptitudeTest;
+}
