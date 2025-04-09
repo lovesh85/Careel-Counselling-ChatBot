@@ -11,7 +11,6 @@ import { apiRequest } from '@/lib/queryClient';
 
 interface AptitudeTestProps {
   onClose: () => void;
-  onComplete: (results: Record<string, number>) => void;
 }
 
 // Define the question structure
@@ -243,7 +242,7 @@ const categoryWeights: Record<string, Record<string, number>> = {
   }
 };
 
-export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps) {
+export default function AptitudeTest({ onClose }: AptitudeTestProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [currentAnswer, setCurrentAnswer] = useState<number | null>(null);
@@ -307,30 +306,14 @@ export default function AptitudeTest({ onClose, onComplete }: AptitudeTestProps)
         setCurrentQuestionIndex(currentQuestionIndex + 1);
         setCurrentAnswer(null);
       } else {
-        // Final question answered - calculate results
-        try {
-          // Pass the updated answers instead of relying on state that might not be updated yet
-          const results = calculateResults(updatedAnswers);
-          
-          // Check if results are valid before completing
-          if (Object.keys(results).length === 0) {
-            toast({
-              title: "Error",
-              description: "There was a problem calculating your results. Please try again.",
-              variant: "destructive"
-            });
-            return;
-          }
-          
-          onComplete(results);
-        } catch (error) {
-          console.error("Error calculating results:", error);
-          toast({
-            title: "Error",
-            description: "There was a problem calculating your results. Please try again.",
-            variant: "destructive"
-          });
-        }
+        // Final question answered - thank user and close
+        toast({
+          title: "Assessment Completed",
+          description: "Thank you for completing the assessment! Your answers have been recorded.",
+        });
+        
+        // Close the test modal
+        onClose();
       }
     }
   };

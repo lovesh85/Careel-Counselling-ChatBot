@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { seedQADatabase } from "./scripts/seedQADatabase";
 
 const app = express();
 app.use(express.json());
@@ -66,5 +67,10 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Seed the QA database with predefined questions and answers
+    seedQADatabase()
+      .then(() => log('QA database seeding completed'))
+      .catch(err => log(`QA database seeding error: ${err.message}`));
   });
 })();

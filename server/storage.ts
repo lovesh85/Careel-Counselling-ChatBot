@@ -1,13 +1,20 @@
 import { 
-  users, chats, chatMessages, assessments, careers, courses, careerSuggestions, quickOptions,
+  users, chats, chatMessages, assessments, careers, courses, careerSuggestions, quickOptions, qaDatabase,
   type User, type InsertUser, type Chat, type InsertChat, type ChatMessage, type InsertChatMessage,
   type Assessment, type InsertAssessment, type Career, type InsertCareer, type Course, type InsertCourse,
-  type CareerSuggestion, type InsertCareerSuggestion, type QuickOption, type InsertQuickOption
+  type CareerSuggestion, type InsertCareerSuggestion, type QuickOption, type InsertQuickOption,
+  type QADatabase, type InsertQADatabase
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike, or } from "drizzle-orm";
 
 export interface IStorage {
+  // QA Database operations
+  getAllQA(): Promise<QADatabase[]>;
+  getQAByQuestion(question: string): Promise<QADatabase | undefined>;
+  findSimilarQuestions(question: string): Promise<QADatabase[]>;
+  createQA(qaItem: InsertQADatabase): Promise<QADatabase>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -45,6 +52,48 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // QA Database operations
+  async getAllQA(): Promise<QADatabase[]> {
+    return await db.select().from(qaDatabase);
+  }
+
+  async getQAByQuestion(question: string): Promise<QADatabase | undefined> {
+    const [qaItem] = await db.select().from(qaDatabase).where(eq(qaDatabase.question, question));
+    return qaItem;
+  }
+  
+  async findSimilarQuestions(question: string): Promise<QADatabase[]> {
+    // Split the question into words (excluding common words)
+    const words = question.toLowerCase()
+      .replace(/[^\w\s]/g, '') // Remove punctuation
+      .split(/\s+/)
+      .filter(word => 
+        word.length > 3 && 
+        !['what', 'when', 'where', 'which', 'who', 'why', 'how', 'that', 'this', 'will', 'with', 'about', 'have'].includes(word)
+      );
+    
+    if (words.length === 0) {
+      return [];
+    }
+    
+    // Create an OR condition for each keyword
+    const conditions = words.map(word => ilike(qaDatabase.question, `%${word}%`));
+    
+    // Find questions that contain any of the keywords
+    const results = await db
+      .select()
+      .from(qaDatabase)
+      .where(or(...conditions))
+      .limit(5);
+    
+    return results;
+  }
+
+  async createQA(qaItem: InsertQADatabase): Promise<QADatabase> {
+    const [newQAItem] = await db.insert(qaDatabase).values(qaItem).returning();
+    return newQAItem;
+  }
+
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

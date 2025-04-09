@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { ChatMessage, Chat, ErrorResponse } from '../types';
-import { getGeminiResponse } from '../lib/gemini';
 
 export function useChat(chatId?: number) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -115,8 +114,22 @@ export function useChat(chatId?: number) {
         role: 'user'
       });
       
-      // Get AI response
-      const aiResponse = await getGeminiResponse(updatedMessages);
+      // Get answer from the QA database
+      let aiResponse = "";
+      try {
+        // Ask the database for an answer to the question
+        const res = await fetch(`/api/qa/answer?question=${encodeURIComponent(content)}`);
+        const data = await res.json();
+        
+        if (res.ok && data.answer) {
+          aiResponse = data.answer;
+        } else {
+          aiResponse = "I don't have specific information about that. Please ask me about career paths, education options, or job requirements.";
+        }
+      } catch (error) {
+        console.error('Error getting answer from database:', error);
+        aiResponse = "I'm sorry, I encountered an error retrieving information. Please try a different question.";
+      }
       
       // Add AI message to UI
       const assistantMessage: ChatMessage = {

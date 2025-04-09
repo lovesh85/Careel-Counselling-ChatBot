@@ -2,16 +2,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import AptitudeTest from '@/components/AptitudeTest';
-import AssessmentResults from '@/components/AssessmentResults';
 import { BrainCog, ClipboardList, Award } from 'lucide-react';
 import { Link } from 'wouter';
 
 export default function Assessment() {
   const [showAptitudeTest, setShowAptitudeTest] = useState(false);
-  const [showAssessmentResults, setShowAssessmentResults] = useState(false);
-  const [assessmentResults, setAssessmentResults] = useState<Record<string, number>>({});
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showCompletionMessage, setShowCompletionMessage] = useState(false);
   
   return (
     <div className="w-full h-full overflow-y-auto p-4 md:p-8 bg-gradient-to-br from-[#1a1a1c] to-[#2d2d31]">
@@ -116,64 +111,10 @@ export default function Assessment() {
         </div>
       </div>
       
-      {/* Test Modals - Only show one at a time with transition state handling */}
-      {showAptitudeTest && !isTransitioning && (
+      {/* Aptitude Test Modal */}
+      {showAptitudeTest && (
         <AptitudeTest 
           onClose={() => setShowAptitudeTest(false)} 
-          onComplete={(results) => {
-            // Enter transition state
-            setIsTransitioning(true);
-            
-            // First hide aptitude test
-            setShowAptitudeTest(false);
-            
-            // Store results immediately
-            setAssessmentResults(results);
-            
-            // Show completion message first
-            setShowCompletionMessage(true);
-            
-            // Delayed showing of results after completion message
-            setTimeout(() => {
-              setShowCompletionMessage(false);
-              setShowAssessmentResults(true);
-              
-              // Exit transition state after showing results
-              setTimeout(() => {
-                setIsTransitioning(false);
-              }, 100);
-            }, 2000); // Show message for 2 seconds
-          }} 
-        />
-      )}
-      
-      {/* Completion Message Modal */}
-      {showCompletionMessage && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#202123] border border-[#4D4D4F] rounded-lg p-8 max-w-md text-center">
-            <div className="w-16 h-16 border-4 border-t-[#1591CF] border-r-[#8E8E9E] border-b-[#C92974] border-l-[#8E8E9E] rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-xl font-medium text-white mb-2">Test Completed Successfully!</h3>
-            <p className="text-[#8E8E9E] mb-4">
-              Your responses are being analyzed and your personalized career recommendations are being generated...
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {/* Assessment Results Modal */}
-      {!showAptitudeTest && showAssessmentResults && Object.keys(assessmentResults).length > 0 && !isTransitioning && !showCompletionMessage && (
-        <AssessmentResults 
-          assessmentResults={assessmentResults}
-          onClose={() => {
-            setShowAssessmentResults(false);
-            // Clear assessment results when closing to prevent state issues
-            // on subsequent assessments
-            setTimeout(() => {
-              if (!showAssessmentResults && !showAptitudeTest) {
-                setAssessmentResults({});
-              }
-            }, 300);
-          }} 
         />
       )}
     </div>

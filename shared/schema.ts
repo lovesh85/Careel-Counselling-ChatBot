@@ -3,6 +3,14 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Q&A for predefined questions and answers
+export const qaDatabase = pgTable("qa_database", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  category: text("category").notNull().default("general"),
+});
+
 // Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -111,6 +119,7 @@ export const quickOptions = pgTable("quick_options", {
 });
 
 // Schema Definitions for Zod
+export const insertQADatabaseSchema = createInsertSchema(qaDatabase).omit({ id: true });
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertChatSchema = createInsertSchema(chats).omit({ id: true, createdAt: true });
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, timestamp: true });
@@ -121,6 +130,9 @@ export const insertCareerSuggestionSchema = createInsertSchema(careerSuggestions
 export const insertQuickOptionSchema = createInsertSchema(quickOptions).omit({ id: true });
 
 // Types
+export type QADatabase = typeof qaDatabase.$inferSelect;
+export type InsertQADatabase = z.infer<typeof insertQADatabaseSchema>;
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
